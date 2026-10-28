@@ -91,7 +91,15 @@ type OfficeHoursStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,shortName=oh
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+// +kubebuilder:printcolumn:name="Next Transition",type=string,JSONPath=`.status.nextTransition`
+// +kubebuilder:printcolumn:name="Workloads",type=integer,JSONPath=`.status.managedWorkloads`
+// +kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.conditions[?(@.type=="Ready")].status`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
+// OfficeHours is a schedule that keeps the selected namespaces running only
+// during working hours.
 type OfficeHours struct {
 	metav1.TypeMeta `json:",inline"`
 

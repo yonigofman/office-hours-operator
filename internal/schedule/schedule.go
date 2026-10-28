@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var ErrUnknownTimeZone = errors.New("unknown time zone")
+
 // Schedule is a parsed, validated set of office hours.
 type Schedule struct {
 	location *time.Location
@@ -39,7 +41,7 @@ var weekdays = map[string]time.Weekday{
 func Parse(timeZone string, workdays []string, start, end string) (Schedule, error) {
 	loc, err := time.LoadLocation(timeZone)
 	if err != nil {
-		return Schedule{}, fmt.Errorf("unknown time zone %q", timeZone)
+		return Schedule{}, fmt.Errorf("%w %q", ErrUnknownTimeZone, timeZone)
 	}
 	if len(workdays) == 0 {
 		return Schedule{}, errors.New("at least one workday is required")

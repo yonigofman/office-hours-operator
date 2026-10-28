@@ -11,12 +11,33 @@ spec:
     kind: OfficeHours
     listKind: OfficeHoursList
     plural: officehours
+    shortNames:
+    - oh
     singular: officehours
-  scope: Namespaced
+  scope: Cluster
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.nextTransition
+      name: Next Transition
+      type: string
+    - jsonPath: .status.managedWorkloads
+      name: Workloads
+      type: integer
+    - jsonPath: .status.conditions[?(@.type=="Ready")].status
+      name: Ready
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: |-
+          OfficeHours is a schedule that keeps the selected namespaces running only
+          during working hours.
         properties:
           apiVersion:
             description: |-
