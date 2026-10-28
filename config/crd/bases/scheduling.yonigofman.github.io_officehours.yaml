@@ -17,7 +17,6 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: OfficeHours is the Schema for the officehours API
         properties:
           apiVersion:
             description: |-
@@ -37,27 +36,97 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of OfficeHours
             properties:
-              foo:
-                description: foo is an example field of OfficeHours. Edit officehours_types.go
-                  to remove/update
+              end:
+                pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
                 type: string
+              namespaceSelector:
+                description: |-
+                  A label selector is a label query over a set of resources. The result of matchLabels and
+                  matchExpressions are ANDed. An empty label selector matches all objects. A null
+                  label selector matches no objects.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: |-
+                        A label selector requirement is a selector that contains values, a key, and an operator that
+                        relates the key and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: |-
+                            operator represents a key's relationship to a set of values.
+                            Valid operators are In, NotIn, Exists and DoesNotExist.
+                          type: string
+                        values:
+                          description: |-
+                            values is an array of string values. If the operator is In or NotIn,
+                            the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                            the values array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: atomic
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                    x-kubernetes-list-type: atomic
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                      map is equivalent to an element of matchExpressions, whose key field is "key", the
+                      operator is "In", and the values array contains only "value". The requirements are ANDed.
+                    type: object
+                type: object
+                x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'namespaceSelector must not be empty: an empty selector
+                    matches every namespace'
+                  rule: (has(self.matchLabels) && size(self.matchLabels) > 0) || (has(self.matchExpressions)
+                    && size(self.matchExpressions) > 0)
+              start:
+                pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+                type: string
+              timeZone:
+                maxLength: 64
+                minLength: 1
+                pattern: ^[A-Za-z0-9_+\-]+(/[A-Za-z0-9_+\-]+)*$
+                type: string
+              workdays:
+                items:
+                  enum:
+                  - Sunday
+                  - Monday
+                  - Tuesday
+                  - Wednesday
+                  - Thursday
+                  - Friday
+                  - Saturday
+                  type: string
+                maxItems: 7
+                minItems: 1
+                type: array
+                x-kubernetes-list-type: set
+            required:
+            - end
+            - namespaceSelector
+            - start
+            - timeZone
+            - workdays
             type: object
           status:
-            description: status defines the observed state of OfficeHours
             properties:
               conditions:
-                description: |-
-                  conditions represent the current state of the OfficeHours resource.
-                  Each condition has a unique type and reflects the status of a specific aspect of the resource.
-
-                  Standard condition types include:
-                  - "Available": the resource is fully functional
-                  - "Progressing": the resource is being created or updated
-                  - "Degraded": the resource failed to reach or maintain its desired state
-
-                  The status of each condition is one of True, False, or Unknown.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -116,6 +185,20 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              managedWorkloads:
+                format: int32
+                type: integer
+              nextTransition:
+                format: date-time
+                type: string
+              observedGeneration:
+                format: int64
+                type: integer
+              phase:
+                enum:
+                - Awake
+                - Asleep
+                type: string
             type: object
         required:
         - spec

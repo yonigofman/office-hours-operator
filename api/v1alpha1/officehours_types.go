@@ -20,38 +20,69 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const ExcludeAnnotation = "scheduling.yonigofman.github.io/exclude"
+const ConditionReady = "Ready"
 
-// OfficeHoursSpec defines the desired state of OfficeHours
+// +kubebuilder:validation:Enum=Sunday;Monday;Tuesday;Wednesday;Thursday;Friday;Saturday
+type Weekday string
+
+const (
+	Sunday    Weekday = "Sunday"
+	Monday    Weekday = "Monday"
+	Tuesday   Weekday = "Tuesday"
+	Wednesday Weekday = "Wednesday"
+	Thursday  Weekday = "Thursday"
+	Friday    Weekday = "Friday"
+	Saturday  Weekday = "Saturday"
+)
+
+// +kubebuilder:validation:Enum=Awake;Asleep
+type Phase string
+
+const (
+	PhaseAwake  Phase = "Awake"
+	PhaseAsleep Phase = "Asleep"
+)
+
 type OfficeHoursSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+	// +kubebuilder:validation:XValidation:rule="(has(self.matchLabels) && size(self.matchLabels) > 0) || (has(self.matchExpressions) && size(self.matchExpressions) > 0)",message="namespaceSelector must not be empty: an empty selector matches every namespace"
+	// +required
+	NamespaceSelector metav1.LabelSelector `json:"namespaceSelector"`
 
-	// foo is an example field of OfficeHours. Edit officehours_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=64
+	// +kubebuilder:validation:Pattern=`^[A-Za-z0-9_+\-]+(/[A-Za-z0-9_+\-]+)*$`
+	// +required
+	TimeZone string `json:"timeZone"`
+
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=7
+	// +listType=set
+	// +required
+	Workdays []Weekday `json:"workdays"`
+
+	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):[0-5][0-9]$`
+	// +required
+	Start string `json:"start"`
+
+	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):[0-5][0-9]$`
+	// +required
+	End string `json:"end"`
 }
 
-// OfficeHoursStatus defines the observed state of OfficeHours.
 type OfficeHoursStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +optional
+	Phase Phase `json:"phase,omitempty"`
 
-	// For Kubernetes API conventions, see:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+	// +optional
+	NextTransition *metav1.Time `json:"nextTransition,omitempty"`
 
-	// conditions represent the current state of the OfficeHours resource.
-	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
-	//
-	// Standard condition types include:
-	// - "Available": the resource is fully functional
-	// - "Progressing": the resource is being created or updated
-	// - "Degraded": the resource failed to reach or maintain its desired state
-	//
-	// The status of each condition is one of True, False, or Unknown.
+	// +optional
+	ManagedWorkloads int32 `json:"managedWorkloads"`
+
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// +listType=map
 	// +listMapKey=type
 	// +optional
@@ -61,26 +92,20 @@ type OfficeHoursStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// OfficeHours is the Schema for the officehours API
 type OfficeHours struct {
 	metav1.TypeMeta `json:",inline"`
 
-	// metadata is a standard object metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitzero"`
 
-	// spec defines the desired state of OfficeHours
 	// +required
 	Spec OfficeHoursSpec `json:"spec"`
 
-	// status defines the observed state of OfficeHours
 	// +optional
 	Status OfficeHoursStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
-
-// OfficeHoursList contains a list of OfficeHours
 type OfficeHoursList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitzero"`
