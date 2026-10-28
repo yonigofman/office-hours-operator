@@ -25,6 +25,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	schedulingv1alpha1 "github.com/yonigofman/office-hours-operator/api/v1alpha1"
+	"github.com/yonigofman/office-hours-operator/internal/schedule"
 )
 
 // OfficeHoursReconciler reconciles a OfficeHours object
@@ -49,7 +50,18 @@ type OfficeHoursReconciler struct {
 func (r *OfficeHoursReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var oh schedulingv1alpha1.OfficeHours
+	if err := r.Get(ctx, req.NamespacedName, &oh); err != nil {
+		// Deleted since the event was queued? Nothing to do. Any other error: retry.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	days := make([]string, 0, len(oh.Spec.Workdays))
+	for _, d := range oh.Spec.Workdays {
+		days = append(days, string(d))
+	}
+
+	sched, err := schedule.Parse(oh.Spec.TimeZone, days, oh.Spec.Start, oh.Spec.End)
 
 	return ctrl.Result{}, nil
 }
