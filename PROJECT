@@ -8,4 +8,14 @@ layout:
 - go.kubebuilder.io/v4
 projectName: office-hours-operator
 repo: github.com/yonigofman/office-hours-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: yonigofman.github.io
+  group: scheduling
+  kind: OfficeHours
+  path: github.com/yonigofman/office-hours-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

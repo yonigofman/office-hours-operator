@@ -1,0 +1,9 @@
+apiVersion: scheduling.yonigofman.github.io/v1alpha1
+kind: OfficeHours
+metadata:
+  labels:
+    app.kubernetes.io/name: office-hours-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: officehours-sample
+spec:
+  # TODO(user): Add fields here
